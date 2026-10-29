@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
@@ -8,23 +8,52 @@
     :root {
       --bg: #0b0f19; --card-bg: #151d30; --text: #f8fafc; --muted: #94a3b8;
       --green: #10b981; --red: #ef4444; --yellow: #f59e0b; --blue: #38bdf8;
+      --purple: #a855f7; --orange: #f97316;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 16px; line-height: 1.5; }
-    .container { max-width: 860px; margin: auto; }
+    .container { max-width: 960px; margin: auto; }
+    
     .header { background: var(--card-bg); padding: 18px 22px; border-radius: 12px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 16px; border: 1px solid #1e293b; gap: 12px; }
     .header-title h1 { font-size: 1.3rem; color: var(--blue); margin-bottom: 4px; }
     .header-title p { font-size: 0.85rem; color: var(--muted); }
+    
     .status-badge { padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 8px; }
     .online { background: rgba(16, 185, 129, 0.2); color: var(--green); border: 1px solid var(--green); }
     .offline { background: rgba(239, 68, 68, 0.2); color: var(--red); border: 1px solid var(--red); }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+    .pulse-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.85); } }
+
+    /* Heartbeat Diagnostic Banner */
+    .diagnostic-bar { background: rgba(30, 41, 59, 0.7); border: 1px solid #334155; border-radius: 10px; padding: 10px 16px; margin-bottom: 16px; display: flex; flex-wrap: wrap; justify-content: space-between; font-size: 0.8rem; color: var(--muted); gap: 10px; }
+    .diag-item span { color: var(--text); font-weight: 600; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 20px; }
     .card { background: var(--card-bg); border-radius: 12px; padding: 18px; border: 1px solid #1e293b; display: flex; flex-direction: column; }
     .card-label { font-size: 0.8rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
     .card-value { font-size: 1.65rem; font-weight: 700; margin: 8px 0; color: var(--blue); }
     .card-sub { font-size: 0.8rem; color: var(--muted); }
     .progress-bar { width: 100%; height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden; margin-top: 8px; }
     .progress-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; background: var(--blue); }
+
+    /* 16 Cores Section */
+    .section-title { font-size: 1.1rem; color: var(--text); font-weight: 700; margin: 24px 0 12px 0; display: flex; align-items: center; justify-content: space-between; }
+    .core-legend { display: flex; gap: 12px; font-size: 0.75rem; }
+    .legend-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; }
+    .tag-p { background: rgba(249, 115, 22, 0.2); color: var(--orange); border: 1px solid var(--orange); }
+    .tag-e { background: rgba(56, 189, 248, 0.2); color: var(--blue); border: 1px solid var(--blue); }
+    .tag-lp { background: rgba(16, 185, 129, 0.2); color: var(--green); border: 1px solid var(--green); }
+
+    .core-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-bottom: 24px; }
+    .core-card { background: var(--card-bg); border: 1px solid #1e293b; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; position: relative; }
+    .core-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .core-name { font-size: 0.8rem; font-weight: 700; }
+    .core-type-badge { font-size: 0.65rem; padding: 1px 5px; border-radius: 3px; font-weight: 600; }
+    .core-freq { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+    .core-load-val { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+    .core-bar { width: 100%; height: 4px; background: #1e293b; border-radius: 2px; overflow: hidden; margin-top: 4px; }
+    .core-bar-fill { height: 100%; border-radius: 2px; transition: width 0.4s ease; }
+
     .footer { text-align: center; margin-top: 24px; font-size: 0.75rem; color: var(--muted); }
   </style>
 </head>
@@ -32,14 +61,24 @@
   <div class="container">
     <div class="header">
       <div class="header-title">
-        <h1>JHAOYANG 旗艦工控與 AI 工作站</h1>
+        <h1>JHAOYANG 旗艦工控與 AI 主力工作站</h1>
         <p id="last-seen">正在連線 GitHub 雲端中繼節點...</p>
       </div>
       <div id="status-pill" class="status-badge offline">
+        <span class="pulse-dot"></span>
         <span id="status-text">連線中...</span>
       </div>
     </div>
 
+    <!-- Heartbeat Diagnostics Bar -->
+    <div class="diagnostic-bar">
+      <div class="diag-item">網頁輪詢心跳: <span id="diag-poll">每 5 秒連線</span></div>
+      <div class="diag-item">讀取連線時間: <span id="diag-read-time">--:--:--</span></div>
+      <div class="diag-item">網路延遲: <span id="diag-latency">-- ms</span></div>
+      <div class="diag-item">數據時間差: <span id="diag-diff">-- 秒</span></div>
+    </div>
+
+    <!-- Main Metrics Grid -->
     <div class="grid">
       <!-- Battery Card -->
       <div class="card">
@@ -73,6 +112,19 @@
       </div>
     </div>
 
+    <!-- 16 Cores Live Topology Section -->
+    <div class="section-title">
+      <span>CPU 16 核心即時頻率與能效調度拓撲</span>
+      <div class="core-legend">
+        <span class="legend-tag tag-p">P-Core (大核)</span>
+        <span class="legend-tag tag-e">E-Core (小核)</span>
+        <span class="legend-tag tag-lp">LP E-Core (SoC節能島)</span>
+      </div>
+    </div>
+    <div id="core-grid" class="core-grid">
+      <!-- Generated Dynamically -->
+    </div>
+
     <div class="footer">
       JHAOYANG Workstation Autonomous Governance System &copy; 2026 | Powered by Pure GitHub Architecture
     </div>
@@ -81,16 +133,29 @@
   <script>
     const GIST_RAW_URL = "https://gist.githubusercontent.com/JhaoYangHou/dd91c3ec89093e032a63f746cc496d55/raw/telemetry.json";
 
+    function formatTime(d) {
+      return d.toTimeString().split(' ')[0];
+    }
+
     async function syncTelemetry() {
+      const startTime = performance.now();
+      const readDate = new Date();
+      document.getElementById('diag-read-time').textContent = formatTime(readDate);
+
       try {
         const res = await fetch(`${GIST_RAW_URL}?_nocache=${Date.now()}`);
+        const latency = Math.round(performance.now() - startTime);
+        document.getElementById('diag-latency').textContent = `${latency} ms`;
+
         if (!res.ok) throw new Error("Gist Not Ready");
         const data = await res.json();
         if (!data || !data.EpochMs) return;
 
         const now = Date.now();
-        const diffSec = Math.round((now - data.EpochMs) / 1000);
-        const isOnline = diffSec <= 60; // 60 秒內有心跳為在線
+        const diffSec = Math.max(0, Math.round((now - data.EpochMs) / 1000));
+        document.getElementById('diag-diff').textContent = `${diffSec} 秒`;
+
+        const isOnline = diffSec <= 90; // 90 秒內判定在線
 
         const pill = document.getElementById('status-pill');
         const text = document.getElementById('status-text');
@@ -104,39 +169,67 @@
           pill.className = "status-badge offline";
           const mins = Math.floor(diffSec / 60);
           text.textContent = "電腦離線 / 睡眠中";
-          lastSeen.textContent = `設備已離線 (最後在線: ${data.Timestamp}，已離線約 ${mins > 0 ? mins + ' 分鐘' : diffSec + ' 秒'})`;
+          lastSeen.textContent = `設備已離線 (最後在線: ${data.Timestamp}，離線約 ${mins > 0 ? mins + ' 分鐘' : diffSec + ' 秒'})`;
         }
 
         // 電池
         document.getElementById('bat-val').textContent = `${data.BatPercent}% (${data.BatVoltageV}V)`;
         document.getElementById('bat-bar').style.width = `${data.BatPercent}%`;
         document.getElementById('bat-bar').style.background = data.BatPercent <= 20 ? 'var(--red)' : 'var(--green)';
-        document.getElementById('pwr-src').textContent = `${data.PowerSource} | 充放電: ${data.DischargeRateW}W`;
+        document.getElementById('pwr-src').textContent = `${data.PowerSource} | 放電: ${data.DischargeRateW}W`;
 
         // CPU
         document.getElementById('cpu-val').textContent = `${data.CpuTempC} °C`;
         const cpuPct = Math.min(Math.max((data.CpuTempC / 100) * 100, 10), 100);
         document.getElementById('cpu-bar').style.width = `${cpuPct}%`;
         document.getElementById('cpu-bar').style.background = data.CpuTempC >= 75 ? 'var(--red)' : (data.CpuTempC >= 60 ? 'var(--yellow)' : 'var(--blue)');
-        document.getElementById('cpu-sub').textContent = `封裝功耗: ${data.CpuPkgW}W | EPP 節能管制中`;
+        document.getElementById('cpu-sub').textContent = `封裝功耗: ${data.CpuPkgW}W | EPP 極致節能`;
 
         // GPU
         const isD3 = data.GpuTempC === 'D3cold';
         document.getElementById('gpu-val').textContent = isD3 ? 'D3cold (0W)' : `${data.GpuTempC} °C`;
         document.getElementById('gpu-bar').style.width = isD3 ? '0%' : '30%';
-        document.getElementById('gpu-sub').textContent = isD3 ? 'RTD3 完全斷電睡眠 (0.00W)' : `${data.GpuW}W (${data.GpuPState})`;
+        document.getElementById('gpu-sub').textContent = isD3 ? 'RTD3 完全斷電休眠 (0.00W)' : `${data.GpuW}W (${data.GpuPState})`;
 
         // SSD & 電池表面
         document.getElementById('ssd-val').textContent = `SSD: ${data.SsdTempC} °C`;
-        document.getElementById('bat-temp').textContent = `電池表面溫度: ${data.BatTempC} °C (冰涼安全)`;
+        document.getElementById('bat-temp').textContent = `電池表面: ${data.BatTempC} °C (冰涼安全)`;
+
+        // 16 核心矩陣渲染
+        if (data.Cores && Array.isArray(data.Cores)) {
+          const grid = document.getElementById('core-grid');
+          grid.innerHTML = '';
+          data.Cores.forEach(core => {
+            const isP = core.Type.includes("P-Core");
+            const isLP = core.Type.includes("LP E-Core");
+            const tagClass = isP ? 'tag-p' : (isLP ? 'tag-lp' : 'tag-e');
+            const typeLabel = isP ? 'P-Core' : (isLP ? 'LP-Core' : 'E-Core');
+            const fillColor = isP ? 'var(--orange)' : (isLP ? 'var(--green)' : 'var(--blue)');
+            const isIdle = core.Load <= 0.5;
+
+            const card = document.createElement('div');
+            card.className = 'core-card';
+            card.innerHTML = `
+              <div class="core-header">
+                <span class="core-name">Core ${core.Id}</span>
+                <span class="core-type-badge ${tagClass}">${typeLabel}</span>
+              </div>
+              <div class="core-freq">${core.Mhz > 0 ? core.Mhz + ' MHz' : '-- MHz'}</div>
+              <div class="core-load-val">${isIdle ? '休眠停靠 (0%)' : '負載 ' + core.Load + '%'}</div>
+              <div class="core-bar">
+                <div class="core-bar-fill" style="width: ${Math.min(core.Load, 100)}%; background: ${fillColor};"></div>
+              </div>
+            `;
+            grid.appendChild(card);
+          });
+        }
       } catch (e) {
         document.getElementById('last-seen').textContent = "讀取雲端中繼節點中...";
       }
     }
 
     syncTelemetry();
-    setInterval(syncTelemetry, 20000); // 前端每 20 秒刷新
+    setInterval(syncTelemetry, 5000); // 前端每 5 秒高頻動態輪詢心跳
   </script>
 </body>
 </html>
-
