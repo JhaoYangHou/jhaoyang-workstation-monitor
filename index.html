@@ -1,0 +1,142 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JHAOYANG 遠端旗艦硬體監控中樞 (GitHub Edition)</title>
+  <style>
+    :root {
+      --bg: #0b0f19; --card-bg: #151d30; --text: #f8fafc; --muted: #94a3b8;
+      --green: #10b981; --red: #ef4444; --yellow: #f59e0b; --blue: #38bdf8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 16px; line-height: 1.5; }
+    .container { max-width: 860px; margin: auto; }
+    .header { background: var(--card-bg); padding: 18px 22px; border-radius: 12px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 16px; border: 1px solid #1e293b; gap: 12px; }
+    .header-title h1 { font-size: 1.3rem; color: var(--blue); margin-bottom: 4px; }
+    .header-title p { font-size: 0.85rem; color: var(--muted); }
+    .status-badge { padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 8px; }
+    .online { background: rgba(16, 185, 129, 0.2); color: var(--green); border: 1px solid var(--green); }
+    .offline { background: rgba(239, 68, 68, 0.2); color: var(--red); border: 1px solid var(--red); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+    .card { background: var(--card-bg); border-radius: 12px; padding: 18px; border: 1px solid #1e293b; display: flex; flex-direction: column; }
+    .card-label { font-size: 0.8rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .card-value { font-size: 1.65rem; font-weight: 700; margin: 8px 0; color: var(--blue); }
+    .card-sub { font-size: 0.8rem; color: var(--muted); }
+    .progress-bar { width: 100%; height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden; margin-top: 8px; }
+    .progress-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; background: var(--blue); }
+    .footer { text-align: center; margin-top: 24px; font-size: 0.75rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-title">
+        <h1>JHAOYANG 旗艦工控與 AI 工作站</h1>
+        <p id="last-seen">正在連線 GitHub 雲端中繼節點...</p>
+      </div>
+      <div id="status-pill" class="status-badge offline">
+        <span id="status-text">連線中...</span>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Battery Card -->
+      <div class="card">
+        <div class="card-label">電池電量 / 供電狀態</div>
+        <div id="bat-val" class="card-value">--%</div>
+        <div class="progress-bar"><div id="bat-bar" class="progress-fill" style="width: 0%;"></div></div>
+        <div id="pwr-src" class="card-sub" style="margin-top: 8px;">--</div>
+      </div>
+
+      <!-- CPU Card -->
+      <div class="card">
+        <div class="card-label">CPU 核心溫度 / 封裝瓦數</div>
+        <div id="cpu-val" class="card-value">-- °C</div>
+        <div class="progress-bar"><div id="cpu-bar" class="progress-fill" style="width: 0%;"></div></div>
+        <div id="cpu-sub" class="card-sub" style="margin-top: 8px;">Intel Core Ultra 7 255H</div>
+      </div>
+
+      <!-- GPU Card -->
+      <div class="card">
+        <div class="card-label">NVIDIA RTX 5060 Laptop 獨顯</div>
+        <div id="gpu-val" class="card-value">-- °C</div>
+        <div class="progress-bar"><div id="gpu-bar" class="progress-fill" style="width: 0%;"></div></div>
+        <div id="gpu-sub" class="card-sub" style="margin-top: 8px;">RTD3 動態休眠控管</div>
+      </div>
+
+      <!-- SSD & Battery Skin -->
+      <div class="card">
+        <div class="card-label">硬碟儲存 / 機身表面溫度</div>
+        <div id="ssd-val" class="card-value">-- °C</div>
+        <div id="bat-temp" class="card-sub" style="margin-top: 8px;">電池表面: -- °C</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      JHAOYANG Workstation Autonomous Governance System &copy; 2026 | Powered by Pure GitHub Architecture
+    </div>
+  </div>
+
+  <script>
+    const GIST_RAW_URL = "https://gist.githubusercontent.com/JhaoYangHou/dd91c3ec89093e032a63f746cc496d55/raw/telemetry.json";
+
+    async function syncTelemetry() {
+      try {
+        const res = await fetch(`${GIST_RAW_URL}?_nocache=${Date.now()}`);
+        if (!res.ok) throw new Error("Gist Not Ready");
+        const data = await res.json();
+        if (!data || !data.EpochMs) return;
+
+        const now = Date.now();
+        const diffSec = Math.round((now - data.EpochMs) / 1000);
+        const isOnline = diffSec <= 60; // 60 秒內有心跳為在線
+
+        const pill = document.getElementById('status-pill');
+        const text = document.getElementById('status-text');
+        const lastSeen = document.getElementById('last-seen');
+
+        if (isOnline) {
+          pill.className = "status-badge online";
+          text.textContent = "在線 (ONLINE)";
+          lastSeen.textContent = `動態數據同步中 (本機時間: ${data.Timestamp})`;
+        } else {
+          pill.className = "status-badge offline";
+          const mins = Math.floor(diffSec / 60);
+          text.textContent = "電腦離線 / 睡眠中";
+          lastSeen.textContent = `設備已離線 (最後在線: ${data.Timestamp}，已離線約 ${mins > 0 ? mins + ' 分鐘' : diffSec + ' 秒'})`;
+        }
+
+        // 電池
+        document.getElementById('bat-val').textContent = `${data.BatPercent}% (${data.BatVoltageV}V)`;
+        document.getElementById('bat-bar').style.width = `${data.BatPercent}%`;
+        document.getElementById('bat-bar').style.background = data.BatPercent <= 20 ? 'var(--red)' : 'var(--green)';
+        document.getElementById('pwr-src').textContent = `${data.PowerSource} | 充放電: ${data.DischargeRateW}W`;
+
+        // CPU
+        document.getElementById('cpu-val').textContent = `${data.CpuTempC} °C`;
+        const cpuPct = Math.min(Math.max((data.CpuTempC / 100) * 100, 10), 100);
+        document.getElementById('cpu-bar').style.width = `${cpuPct}%`;
+        document.getElementById('cpu-bar').style.background = data.CpuTempC >= 75 ? 'var(--red)' : (data.CpuTempC >= 60 ? 'var(--yellow)' : 'var(--blue)');
+        document.getElementById('cpu-sub').textContent = `封裝功耗: ${data.CpuPkgW}W | EPP 節能管制中`;
+
+        // GPU
+        const isD3 = data.GpuTempC === 'D3cold';
+        document.getElementById('gpu-val').textContent = isD3 ? 'D3cold (0W)' : `${data.GpuTempC} °C`;
+        document.getElementById('gpu-bar').style.width = isD3 ? '0%' : '30%';
+        document.getElementById('gpu-sub').textContent = isD3 ? 'RTD3 完全斷電睡眠 (0.00W)' : `${data.GpuW}W (${data.GpuPState})`;
+
+        // SSD & 電池表面
+        document.getElementById('ssd-val').textContent = `SSD: ${data.SsdTempC} °C`;
+        document.getElementById('bat-temp').textContent = `電池表面溫度: ${data.BatTempC} °C (冰涼安全)`;
+      } catch (e) {
+        document.getElementById('last-seen').textContent = "讀取雲端中繼節點中...";
+      }
+    }
+
+    syncTelemetry();
+    setInterval(syncTelemetry, 20000); // 前端每 20 秒刷新
+  </script>
+</body>
+</html>
+
