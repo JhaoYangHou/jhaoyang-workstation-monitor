@@ -149,10 +149,11 @@
 
         if (!res.ok) throw new Error("Gist Not Ready");
         const data = await res.json();
-        if (!data || !data.EpochMs) return;
+        if (!data) return;
 
+        const epoch = data.EpochMs || (data.Timestamp ? Date.parse(data.Timestamp.replace(' ', 'T') + '+08:00') : Date.now());
         const now = Date.now();
-        const diffSec = Math.max(0, Math.round((now - data.EpochMs) / 1000));
+        const diffSec = Math.max(0, Math.round((now - epoch) / 1000));
         document.getElementById('diag-diff').textContent = `${diffSec} 秒`;
 
         const isOnline = diffSec <= 90; // 90 秒內判定在線
