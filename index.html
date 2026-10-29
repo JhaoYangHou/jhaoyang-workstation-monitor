@@ -143,7 +143,7 @@
       document.getElementById('diag-read-time').textContent = formatTime(readDate);
 
       try {
-        const res = await fetch(`${GIST_RAW_URL}?_nocache=${Date.now()}`);
+        const res = await fetch(`${GIST_RAW_URL}?_nocache=${Date.now()}`, { cache: "no-store" });
         const latency = Math.round(performance.now() - startTime);
         document.getElementById('diag-latency').textContent = `${latency} ms`;
 
@@ -177,7 +177,8 @@
         document.getElementById('bat-val').textContent = `${data.BatPercent}% (${data.BatVoltageV}V)`;
         document.getElementById('bat-bar').style.width = `${data.BatPercent}%`;
         document.getElementById('bat-bar').style.background = data.BatPercent <= 20 ? 'var(--red)' : 'var(--green)';
-        document.getElementById('pwr-src').textContent = `${data.PowerSource} | 放電: ${data.DischargeRateW}W`;
+        const curText = data.CurrentmA ? ` | 電流: ${data.CurrentmA} mA` : (data.IsAcOnline ? ' | 市電直供 0mA' : '');
+        document.getElementById('pwr-src').textContent = `${data.PowerSource} | 功率: ${data.DischargeRateW}W${curText}`;
 
         // CPU
         document.getElementById('cpu-val').textContent = `${data.CpuTempC} °C`;
